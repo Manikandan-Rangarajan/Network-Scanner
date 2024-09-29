@@ -47,12 +47,26 @@ import express from 'express';
 import nmap from 'node-nmap';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors'
+import bodyParser from 'body-parser';
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware to parse JSON requests
 app.use(express.json());
+app.use(cors());
+app.use(bodyParser.json());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Serve the main HTML file
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
 
 // Route to perform a network scan
 app.get('/scan', (req, res) => {
@@ -75,6 +89,16 @@ app.get('/scan', (req, res) => {
     // Start the scan
     quickscan.startScan();
 });
+
+// Serve other pages
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+
+// Handle 404 errors
+app.use((req, res) => {
+    res.status(404).send('404 - Not Found');
+  });
 
 // Start the server
 app.listen(PORT, () => {
