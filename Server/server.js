@@ -1,3 +1,4 @@
+// server.js
 import express from 'express';
 import nmap from 'node-nmap';
 import path from 'path';
@@ -13,31 +14,44 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-// Serve static files from the 'dist' directory (assumes a build step for a frontend application)
+// Serve static files from the 'dist' directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../Client/dist')));
 
 // Route to perform a network scan
-app.get('/scan', (req, res) => {
-    // Get the target from query parameters, default to '127.0.0.1'
+app.get('/scan/:type', (req, res) => {
     const target = req.query.target || '10.10.52.1';
-    
-    // Create a new QuickScan instance
-    const quickscan = new nmap.QuickScan(target);
+    const scanType = req.params.type;
+    let scanOptions;
 
-    // Handle the complete event
-    quickscan.on('complete', (data) => {
+    switch (scanType) {
+        case 'quick':
+            scanOptions = new nmap.QuickScan(target);
+            break;
+        case 'full':
+            scanOptions = new nmap.Scan(target);
+            break;
+        case 'os':
+            scanOptions = new nmap.Scan(target, '-O');
+            break;
+        case 'service':
+            scanOptions = new nmap.Scan(target, '-sV');
+            break;
+        default:
+            return res.status(400).json({ error: 'Invalid scan type' });
+    }
+
+    scanOptions.on('complete', (data) => {
         res.json(data);
     });
 
-    // Handle the error event
-    quickscan.on('error', (error) => {
+    scanOptions.on('error', (error) => {
         res.status(500).json({ error: error.message });
     });
 
     // Start the scan
-    quickscan.startScan();
+    scanOptions.startScan();
 });
 
 // Serve the main index.html for other routes
