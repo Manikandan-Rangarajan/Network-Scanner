@@ -18,6 +18,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "node-nmap": "^4.0.0",
+    "nodemon": "^3.1.7",
     "path": "^0.12.7",
     "portscanner": "^2.2.0"
   }

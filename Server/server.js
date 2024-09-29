@@ -1,77 +1,27 @@
-// import express from 'express';
-// import portscanner from 'portscanner';
-
-// const app = express();
-// const HOST = '10.10.52.1';
-// const START_PORT = 1;
-// const END_PORT = 4000;
-
-// // app.get('/available-port', (req, res) => {
-//     // Scan for the first available port between 3000 and 4000
-//     portscanner.portscan(START_PORT, END_PORT, HOST, (error, results) => {
-//         if (error) {
-//             console.error('Error finding port:', error);
-//             // res.status(500).json({ error: 'Failed to scan ports' });
-//         } else {
-//             console.log('Available port:', port);
-//             // res.json({ availablePort: port });
-//         }
-//     });
-// // });
-
-// const PORT = 5000;
-
-// app.listen(PORT, () => {
-//     console.log(`Server running on http://localhost:${PORT}`);
-// });
-
-// import portscanner from 'portscanner';
-
-// portscanner.findAPortNotInUse(3000, 3000, '45.33.32.156', (error, port) => {
-//   if (error) {
-//     console.error('Error finding port:', error);
-//   } else {
-//     console.log('Available port:', port);
-//   }
-// });
-
-// portscanner.checkPortStatus(443, '45.33.32.156', (error, status) => {
-//     if (error) {
-//       console.error('Error checking port status:', error);
-//     } else {
-//       console.log('Port 443 is:', status);
-//     }
-//   });
-
 import express from 'express';
 import nmap from 'node-nmap';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import cors from 'cors'
+import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware to parse JSON requests
-app.use(express.json());
+// Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json());
 
+// Serve static files from the 'dist' directory (assumes a build step for a frontend application)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// Serve the main HTML file
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
+app.use(express.static(path.join(__dirname, '../Client/dist')));
 
 // Route to perform a network scan
 app.get('/scan', (req, res) => {
     // Get the target from query parameters, default to '127.0.0.1'
-    const target = req.query.target || '127.0.0.1';
+    const target = req.query.target || '10.10.52.1';
     
     // Create a new QuickScan instance
     const quickscan = new nmap.QuickScan(target);
@@ -90,19 +40,17 @@ app.get('/scan', (req, res) => {
     quickscan.startScan();
 });
 
-// Serve other pages
+// Serve the main index.html for other routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
+    res.sendFile(path.join(path.resolve(), '../Client/dist', 'index.html'));
+});
 
 // Handle 404 errors
 app.use((req, res) => {
     res.status(404).send('404 - Not Found');
-  });
+});
 
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-  
