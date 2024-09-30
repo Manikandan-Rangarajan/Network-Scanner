@@ -30,20 +30,21 @@ app.get('/scan/:type', (req, res) => {
             scanOptions = new nmap.QuickScan(target);
             break;
         case 'full':
-            scanOptions = new nmap.Scan(target);
+            scanOptions = new nmap.NmapScan(target,"-sV");
             break;
         case 'os':
-            scanOptions = new nmap.Scan(target, '-O');
+            scanOptions = new nmap.NmapScan(target, "--script-trace");
             break;
         case 'service':
-            scanOptions = new nmap.Scan(target, '-sV');
+            scanOptions = new nmap.NmapScan(target, "--reason");
             break;
         default:
             return res.status(400).json({ error: 'Invalid scan type' });
     }
 
-    scanOptions.on('complete', (data) => {
+    scanOptions.on('complete', (data,time) => {
         res.json(data);
+        console.log("total scan time" + scanOptions.scanTime);
     });
 
     scanOptions.on('error', (error) => {
