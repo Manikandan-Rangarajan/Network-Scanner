@@ -9,24 +9,41 @@ function App() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [scanTrigger, setScanTrigger] = useState(0);
   const [scrollText, setScrollText] = useState('');
+  const [hackerHost, setHackerHost] = useState('');
+  const [hackerIp, setHackerIp] = useState('');
 
   useEffect(() => {
-    const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+    const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
     const intervalId = setInterval(() => {
       setScrollText(text.substring(0, scrollText.length + 1));
     }, 50);
     return () => clearInterval(intervalId);
-  }, [scrollText]);
+  }, [scrollText,scanTrigger]);
+
+  useEffect(() => {
+    if (results){
+      const hostname = results[0].hostname;
+      const ip = results[0].ip;
+      const intervalId = setInterval(() => {
+        setHackerHost(hostname.substring(0, hackerHost.length + 1));
+        setHackerIp(ip.substring(0, hackerIp.length + 1));
+      }, 50);
+      return () => clearInterval(intervalId);
+    }
+  }, [results,hackerHost, hackerIp,scanTrigger]);
 
   const handleScan = async () => {
     setLoading(true);
     setError(null);
     setResults(null);
+    setScanTrigger((prevTrigger) => prevTrigger + 1);
 
     try {
-      const response = await axios.get(`http://localhost:5000/scan/${scanType}?target=${target}`);
+      const response = await axios.get(`http://localhost:8080/scan/${scanType}?target=${target}`);
       setResults(response.data);
+      console.log(response.data);
     } catch (err) {
       setError('Failed to perform the scan.');
       console.error(err);
@@ -34,7 +51,7 @@ function App() {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="App flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-200 relative">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -74,11 +91,18 @@ function App() {
         <div className="mt-4 z-10">
           <h2 className="text-2xl font-bold text-green-500">Scan Results:</h2>
           <div className="hacker-text">
-            {Object.keys(results).map((key, index) => (
-              <p key={index} className="text-green-500 text-xs font-mono">
-                {key}: {results[key]}
+          <p className="text-green-500 text-xs font-mono">
+                {/* {key}: {results[key]} */}
+                {/* {results[0].hostname}
+                <br></br>
+                {results[0].ip} */}
+                Hostname: {hackerHost}
+                <br></br>
+                IP: {hackerIp}
+                {/* {results[0].mac}
+                {results[0].openPorts} */}
+                {/* {results[0].osNmap} */}
               </p>
-            ))}
           </div>
         </div>
       )}
