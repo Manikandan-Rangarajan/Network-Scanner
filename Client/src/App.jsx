@@ -68,7 +68,7 @@ function App() {
           Scan
         </button>
       </div>
-      {loading && <p className="text-blue-500 z-10">Loading...</p>}
+      {loading && <p className="text-green-500 z-10">Loading...</p>}
       {error && <p className="text-red-500 z-10">{error}</p>}
       {results && (
         <div className="mt-4 z-10">
