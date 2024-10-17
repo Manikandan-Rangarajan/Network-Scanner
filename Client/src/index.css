@@ -12,10 +12,6 @@
   }
 }
 
-.animate-scroll {
-  animation: scroll 10s linear infinite;
-}
-
 @keyframes scroll {
   0% {
     transform: translateX(0);
