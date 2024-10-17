@@ -13,6 +13,8 @@ function App() {
   const [scrollText, setScrollText] = useState('');
   const [hackerHost, setHackerHost] = useState('');
   const [hackerIp, setHackerIp] = useState('');
+  const [port, setPort] = useState([]);
+  const [service, setService] = useState([]);
 
   useEffect(() => {
     const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
@@ -41,9 +43,17 @@ function App() {
     setScanTrigger((prevTrigger) => prevTrigger + 1);
 
     try {
-      const response = await axios.get(`http://localhost:8080/scan/${scanType}?target=${target}`);
+      const response = await axios.get(`http://localhost:5000/scan/${scanType}?target=${target}`);
       setResults(response.data);
       console.log(response.data);
+      port = response.data[0].openPorts;
+      console.log(port);
+      port.forEach((ports)=>{
+            console.log(ports?.protocol);
+            setPort(ports?.protocol)
+            console.log(ports?.service);
+            setService(ports?.service)
+      })
     } catch (err) {
       setError('Failed to perform the scan.');
       console.error(err);
@@ -96,9 +106,11 @@ function App() {
                 {/* {results[0].hostname}
                 <br></br>
                 {results[0].ip} */}
+                
                 Hostname: {hackerHost}
                 <br></br>
                 IP: {hackerIp}
+                
                 {/* {results[0].mac}
                 {results[0].openPorts} */}
                 {/* {results[0].osNmap} */}
