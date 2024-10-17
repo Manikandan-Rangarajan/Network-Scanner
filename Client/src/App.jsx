@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './index.css';
@@ -13,17 +12,21 @@ function App() {
   const [scrollText, setScrollText] = useState('');
   const [hackerHost, setHackerHost] = useState('');
   const [hackerIp, setHackerIp] = useState('');
+  const [ports, setPorts] = useState([]); // Initialize as an empty array
 
   useEffect(() => {
-    const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+    const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n' +
+                 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n' +
+                 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n' +
+                 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'; // Added line breaks
     const intervalId = setInterval(() => {
       setScrollText(text.substring(0, scrollText.length + 1));
     }, 50);
     return () => clearInterval(intervalId);
-  }, [scrollText,scanTrigger]);
+  }, [scrollText, scanTrigger]);
 
   useEffect(() => {
-    if (results){
+    if (results) {
       const hostname = results[0].hostname;
       const ip = results[0].ip;
       const intervalId = setInterval(() => {
@@ -32,7 +35,7 @@ function App() {
       }, 50);
       return () => clearInterval(intervalId);
     }
-  }, [results,hackerHost, hackerIp,scanTrigger]);
+  }, [results, hackerHost, hackerIp, scanTrigger]);
 
   const handleScan = async () => {
     setLoading(true);
@@ -43,7 +46,8 @@ function App() {
     try {
       const response = await axios.get(`http://localhost:8080/scan/${scanType}?target=${target}`);
       setResults(response.data);
-      console.log(response.data);
+      const openPorts = response.data[0]?.openPorts || []; // Ensure openPorts is an array
+      setPorts(openPorts); // Correctly set the ports state
     } catch (err) {
       setError('Failed to perform the scan.');
       console.error(err);
@@ -51,7 +55,7 @@ function App() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="App flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-200 relative">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -74,7 +78,7 @@ function App() {
           className="border border-gray-600 p-2 rounded bg-gray-800 text-gray-200"
         >
           <option value="quick">Quick Scan</option>
-          <option value="full">Full Scan</option>
+          <option value=" full">Full Scan</option>
           <option value="os">OS Detection</option>
           <option value="service">Service Detection</option>
         </select>
@@ -86,23 +90,24 @@ function App() {
         </button>
       </div>
       {loading && <p className="text-green-500 z-10">Loading...</p>}
-      {error && <p className="text-red-500 z-10">{error}</p>}
+      {error && <p className="text -red-500 z-10 ">{error}</p>}
       {results && (
         <div className="mt-4 z-10">
           <h2 className="text-2xl font-bold text-green-500">Scan Results:</h2>
           <div className="hacker-text">
-          <p className="text-green-500 text-xs font-mono">
-                {/* {key}: {results[key]} */}
-                {/* {results[0].hostname}
-                <br></br>
-                {results[0].ip} */}
-                Hostname: {hackerHost}
-                <br></br>
-                IP: {hackerIp}
-                {/* {results[0].mac}
-                {results[0].openPorts} */}
-                {/* {results[0].osNmap} */}
+            {Object.keys(results[0]).map((key, index) => (
+              <p key={index} className="text-green-500 text-xs font-mono">
+                {key}: {results[0][key]}
+                <br />
               </p>
+            ))}
+            {ports.length > 0 && // Check if ports is not empty
+              ports.map((port, index) => (
+                <p key={index} className="text-green-500 text-xs font-mono">
+                  Port {port.port}: {port.protocol} ({port.service})
+                  <br />
+                </p>
+              ))}
           </div>
         </div>
       )}

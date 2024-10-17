@@ -29,3 +29,10 @@
   background-color: #000;
   padding: 10px;
 }
+
+.animate-scroll {
+  white-space: normal; /* Allow wrapping at the edge of the screen */
+  overflow-wrap: break-word; /* Break long words if needed */
+  width: 100%; /* Ensure it takes the full width of the container */
+  display: block; /* Make it a block element for full-width */
+}
