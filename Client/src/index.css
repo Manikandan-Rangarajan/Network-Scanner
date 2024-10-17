@@ -11,3 +11,21 @@
     src: url(/fonts/Roboto.woff2) format('woff2');
   }
 }
+
+.animate-scroll {
+  animation: scroll 10s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+}
+
+.hacker-text {
+  font-family: 'monospace';
+  font-size: 12px;
+  color: #33CC33;
+  background-color: #000;
+  padding: 10px;
+}
