@@ -3,7 +3,7 @@ import axios from 'axios';
 import './index.css';
 
 function App() {
-  const [target, setTarget] = useState('10.10.52.1');
+  const [target, setTarget] = useState('45.33.32.156');
   const [scanType, setScanType] = useState('quick');
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -12,13 +12,19 @@ function App() {
   const [scrollText, setScrollText] = useState('');
   const [hackerHost, setHackerHost] = useState('');
   const [hackerIp, setHackerIp] = useState('');
-  const [ports, setPorts] = useState([]); // Initialize as an empty array
+  const [fscan, setFscan] = useState(false);
+  const [osScan, setOsScan] = useState(false);
+  let [port, setPort] = useState([]);
+  let [service, setService] = useState([]);
+  const [hport, setHport] = useState([]);
+  const [hOs, setHos] = useState('');
+
 
   useEffect(() => {
     const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n' +
-                 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n' +
-                 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n' +
-                 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'; // Added line breaks
+      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n' +
+      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n' +
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'; 
     const intervalId = setInterval(() => {
       setScrollText(text.substring(0, scrollText.length + 1));
     }, 50);
@@ -37,19 +43,137 @@ function App() {
     }
   }, [results, hackerHost, hackerIp, scanTrigger]);
 
+  useEffect(() => {
+    if (results && (fscan || osScan) ) {
+      const hport = results[0].openPorts; // Extract openPorts array
+      let index = 0; // Initialize an index to track the current port being displayed
+  
+      const intervalId = setInterval(() => {
+        if (index < hport.length) {
+          setHport((prevHport) => [...prevHport, hport[index]]); // Append the current port to the state
+          index++; // Move to the next port
+        } else {
+          clearInterval(intervalId); // Clear the interval when all ports are displayed
+        }
+      }, 50);
+  
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    }
+  }, [results, fscan, osScan]);
+
+  useEffect(() => {
+    if (results && osScan) {
+      const hOs = results[0].osNmap;
+      if (hOs) { // Check if hOs is not null or undefined
+        const intervalId = setInterval(() => {
+          setHos((prev) => hOs.substring(0, prev.length + 1)); // Update hOs gradually
+        }, 50);
+        return () => clearInterval(intervalId);
+      } else {
+        setHos('OS Not Found'); // Optionally reset hOs if it's null
+      }
+    }
+  }, [results, osScan]);
+
+  // nver uncomment this
+  // useEffect(() => {
+  //   if (results) {
+  //     const hport = port
+  //     const hservice = service;
+  //     const intervalId = setInterval(() => {
+  //       setHackerHost(hport(0, hackerHost.length + 1));
+  //       setHackerIp(hservice(0, hackerIp.length + 1));
+  //     }, 50);
+  //     return () => clearInterval(intervalId);
+  //   }
+  // }, [results, hport, hservice, scanTrigger]);
+
   const handleScan = async () => {
     setLoading(true);
     setError(null);
     setResults(null);
     setScanTrigger((prevTrigger) => prevTrigger + 1);
 
+    // Call the respective scan function based on the selected scan type
+    if (scanType === 'quick') {
+      await quickScan();
+    } else if (scanType === 'full') {
+      await fullScan();
+      setFscan(true);
+    } else if (scanType === 'os') {
+      await osDetectionScan();
+      setOsScan(true);
+    } else if (scanType === 'service') {
+      await serviceDetectionScan();
+    }
+  };
+
+  // Separate functions for each scan type
+  const quickScan = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/scan/${scanType}?target=${target}`);
+      const response = await axios.get(`http://localhost:5000/scan/quick?target=${target}`);
       setResults(response.data);
-      const openPorts = response.data[0]?.openPorts || []; // Ensure openPorts is an array
-      setPorts(openPorts); // Correctly set the ports state
+      console.log(response.data);
     } catch (err) {
-      setError('Failed to perform the scan.');
+      setError('Failed to perform the quick scan.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fullScan = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/scan/full?target=${target}`);
+      setResults(response.data);
+      console.log(response.data);
+      port = response.data[0].openPorts;
+      port.forEach((ports)=>{
+        setPort(ports?.protocol)
+        console.log(ports?.protocol,ports?.service);
+        setService(ports?.service)
+  })
+    } catch (err) {
+      setError('Failed to perform the full scan.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const osDetectionScan = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/scan/os?target=${target}`);
+      setResults(response.data);
+      console.log(response.data);
+      port = response.data[0].openPorts;
+      port.forEach((ports)=>{
+        setPort(ports?.protocol)
+        console.log(ports?.protocol,ports?.service);
+        setService(ports?.service)
+  })
+} catch (err) {
+      setError('Failed to perform the OS detection scan.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const serviceDetectionScan = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/scan/service?target=${target}`);
+      setResults(response.data);
+      console.log(response.data);
+      port = response.data[0].openPorts;
+      port.forEach((ports)=>{
+        setPort(ports?.protocol)
+        console.log(ports?.protocol,ports?.service);
+        setService(ports?.service)
+      })
+
+    } catch (err) {
+      setError('Failed to perform the service detection scan.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -78,7 +202,7 @@ function App() {
           className="border border-gray-600 p-2 rounded bg-gray-800 text-gray-200"
         >
           <option value="quick">Quick Scan</option>
-          <option value=" full">Full Scan</option>
+          <option value="full">Full Scan</option>
           <option value="os">OS Detection</option>
           <option value="service">Service Detection</option>
         </select>
@@ -90,25 +214,43 @@ function App() {
         </button>
       </div>
       {loading && <p className="text-green-500 z-10">Loading...</p>}
-      {error && <p className="text -red-500 z-10 ">{error}</p>}
+      {error && <p className="text-red-500 z-10 ">{error}</p>}
       {results && (
         <div className="mt-4 z-10">
           <h2 className="text-2xl font-bold text-green-500">Scan Results:</h2>
           <div className="hacker-text">
-            {Object.keys(results[0]).map((key, index) => (
-              <p key={index} className="text-green-500 text-xs font-mono">
-                {key}: {results[0][key]}
-                <br />
-              </p>
-            ))}
-            {ports.length > 0 && // Check if ports is not empty
-              ports.map((port, index) => (
-                <p key={index} className="text-green-500 text-xs font-mono">
-                  Port {port.port}: {port.protocol} ({port.service})
-                  <br />
-                </p>
-              ))}
+            <p className="text-green-500 text-xs font-mono">
+              Hostname: {hackerHost}
+              <br></br>
+              IP: {hackerIp}
+            </p>
           </div>
+    {(fscan||osScan) && hport.length > 0 && (
+  <div className="mt-4">
+    <h3 className="text-xl font-bold text-green-500">Open Ports:</h3>
+    <div className="hacker-text">
+    <ul className="text-green-500 text-xs font-mono">
+      {hport.map((portObj, index) => (
+        <li key={index}>
+          Port: {portObj.port}, Protocol: {portObj.protocol}, Service: {portObj.service}
+        </li>
+      ))}
+    </ul>
+    </div>
+  </div>
+)}
+{osScan && results && (
+  <div className="mt-4">
+    <h3 className="text-xl font-bold text-green-500">OS:</h3>
+    <div className="hacker-text">
+    <p className="text-green-500 text-xs font-mono">
+      Os: {hOs}
+    </p>
+    </div>
+  </div>
+)}
+
+
         </div>
       )}
     </div>

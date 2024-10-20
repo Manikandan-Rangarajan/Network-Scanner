@@ -7,7 +7,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
 // Middleware setup
 app.use(cors({
@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname, '../Client/dist')));
 
 // Route to perform a network scan
 app.get('/scan/:type', (req, res) => {
-    const target = req.query.target || '10.10.52.1';
+    const target = req.query.target ;
     const scanType = req.params.type;
     let scanOptions;
 
@@ -34,7 +34,7 @@ app.get('/scan/:type', (req, res) => {
             scanOptions = new nmap.QuickScan(target);
             break;
         case 'full':
-            scanOptions = new nmap.NmapScan(target,"-sV");
+            scanOptions = new nmap.NmapScan(target,"--webxml");
             break;
         case 'os':
             scanOptions = new nmap.NmapScan(target, "--script-trace");
